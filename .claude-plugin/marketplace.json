@@ -1,0 +1,15 @@
+{
+  "name": "claude-semantic-scholar",
+  "owner": { "name": "ekunish" },
+  "metadata": { "description": "Semantic Scholar API plugin for Claude Code" },
+  "plugins": [
+    {
+      "name": "semantic-scholar",
+      "source": "./",
+      "description": "Literature search and citation exploration using Semantic Scholar API",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": ["academic", "papers", "citations", "literature-review", "semantic-scholar"]
+    }
+  ]
+}
