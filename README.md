@@ -5,10 +5,13 @@ Claude Code plugin for academic literature search using the [Semantic Scholar AP
 ## Features
 
 - **Keyword search** with boolean operators, year/citation/venue filters
-- **Citation network exploration** (forward and backward)
+- **Title matching** for exact paper lookup
+- **Citation network exploration** (forward and backward, with influential-only filter)
 - **Seed-based discovery** via recommendations API
 - **Author search** with h-index, papers, affiliations
-- **Batch paper retrieval** (up to 500 at once)
+- **Batch retrieval** for papers (up to 500) and authors (up to 1000)
+- **BibTeX export** from paper details or batch results
+- **Zotero integration** via Search-to-Zotero pipeline (see Optional Dependencies)
 - **Systematic review workflow** with PICO framework support
 - **Built-in rate limiting** across all scripts
 
@@ -27,6 +30,10 @@ The skill triggers automatically when you ask about literature search, paper dis
 - "Find papers about heart sound classification since 2020"
 - "この論文を引用している論文を探して: DOI:10.1109/TBME.2023.1234"
 - "Recommend papers similar to these seed papers"
+
+## Optional Dependencies
+
+- **[claude-zotero](https://github.com/ekunish/claude-zotero)** — Required for the Search-to-Zotero pipeline (Workflow 6). Enables `ss-batch.sh --bibtex | zotero_import.sh` to import search results directly into Zotero. The `--bibtex` flag itself works standalone and outputs standard BibTeX to stdout.
 
 ## Rate Limiting
 
