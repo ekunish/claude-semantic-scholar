@@ -1,7 +1,7 @@
 {
   "name": "semantic-scholar",
   "description": "Literature search and citation exploration using Semantic Scholar API",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": { "name": "ekunish" },
   "repository": "https://github.com/ekunish/claude-semantic-scholar",
   "license": "MIT"

@@ -24,8 +24,27 @@ Search academic papers, explore citation networks, and discover related work usi
 | Author search | `ss-author.sh` | `ss-author.sh "Springer"` |
 | Author papers | `ss-author.sh` | `ss-author.sh --id 12345 --papers` |
 | Author batch | `ss-author-batch.sh` | `ss-author-batch.sh id1 id2 id3` |
+| arXiv paper | `ss-arxiv.sh` | `ss-arxiv.sh 2106.15928` |
+| arXiv BibTeX | `ss-arxiv.sh` | `ss-arxiv.sh 2106.15928 --bibtex` |
+| arXiv search | `ss-arxiv-search.sh` | `ss-arxiv-search.sh "transformer" --category cs.CL` |
 
 Scripts are on PATH — call them directly: `ss-search.sh ...`
+
+## arXiv API vs S2 API
+
+The plugin includes arXiv API scripts (`ss-arxiv*.sh`) that bypass S2's rate limit. Use them when working with arXiv papers:
+
+| Use case | Script | Why |
+|----------|--------|-----|
+| arXiv paper metadata | `ss-arxiv.sh` | 3s wait vs 60s (no S2 API key) |
+| arXiv category search | `ss-arxiv-search.sh` | S2 has no category filter |
+| arXiv paper BibTeX | `ss-arxiv.sh --bibtex` | No S2 rate limit consumed |
+| Citation network | `ss-citations.sh` | arXiv API has no citation data |
+| Recommendations | `ss-recommend.sh` | arXiv API has no recommendation engine |
+| Cross-database search | `ss-search.sh` | Covers journals, conferences, not just arXiv |
+| Sort by citations | `ss-search.sh` | arXiv API has no citation counts |
+
+**Rule of thumb**: If the paper is on arXiv and the task doesn't need citation data, use `ss-arxiv*.sh` first.
 
 ## Workflow 1: Keyword Search
 
@@ -230,6 +249,12 @@ For a single paper:
 ss-paper.sh <paper_id> --bibtex > /tmp/paper.bib
 ```
 
+For arXiv papers (faster — no S2 rate limit):
+
+```bash
+ss-arxiv.sh 2106.15928 --bibtex > /tmp/paper.bib
+```
+
 ### Step 3: Import to Zotero
 
 ```bash
@@ -247,7 +272,7 @@ zotero_import.sh --doi "10.1234/example1" "10.1234/example2"
 When the user provides a reference in various formats, resolve it to a usable ID:
 
 - **DOI**: Prefix with `DOI:` → `ss-paper.sh "DOI:10.1109/TBME.2023.1234"`
-- **ArXiv**: Prefix with `ARXIV:` → `ss-paper.sh "ARXIV:2106.15928"`
+- **ArXiv**: Use arXiv API (faster) → `ss-arxiv.sh 2106.15928`, or S2 → `ss-paper.sh "ARXIV:2106.15928"`
 - **PubMed**: Prefix with `PMID:` → `ss-paper.sh "PMID:19872477"`
 - **Title**: Use exact match → `ss-match.sh "exact paper title here"`
 - **S2 URL**: Extract paper ID from the URL path
