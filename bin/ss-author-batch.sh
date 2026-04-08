@@ -1,36 +1,28 @@
 #!/usr/bin/env bash
-# ss-batch.sh — Batch retrieve multiple papers
-# Usage: echo '["id1","id2"]' | ss-batch.sh [options]
-#    or: ss-batch.sh id1 id2 id3 [options]
-#   --fields <f>  Comma-separated fields (default: title,year,citationCount,authors,venue,openAccessPdf)
-#   --bibtex      Output concatenated BibTeX citations instead of JSON
+# ss-author-batch.sh — Batch retrieve multiple authors
+# Usage: echo '["id1","id2"]' | ss-author-batch.sh [options]
+#    or: ss-author-batch.sh id1 id2 id3 [options]
+#   --fields <f>  Comma-separated fields (default: name,affiliations,hIndex,paperCount,citationCount)
 #
-# Accepts paper IDs as arguments or JSON array from stdin.
-# Auto-chunks into batches of 500 if more IDs are provided.
+# Accepts author IDs as arguments or JSON array from stdin.
+# Auto-chunks into batches of 1000 if more IDs are provided.
 set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 BASE_URL="https://api.semanticscholar.org/graph/v1"
-DEFAULT_FIELDS="title,year,citationCount,authors,venue,openAccessPdf"
-BATCH_SIZE=500
+DEFAULT_FIELDS="name,affiliations,hIndex,paperCount,citationCount"
+BATCH_SIZE=1000
 
 fields="$DEFAULT_FIELDS"
 ids=()
-bibtex=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --fields) fields="$2"; shift 2 ;;
-    --bibtex) bibtex=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
     *) ids+=("$1"); shift ;;
   esac
 done
-
-# Ensure citationStyles is in fields when --bibtex is requested
-if $bibtex && [[ "$fields" != *"citationStyles"* ]]; then
-  fields="${fields},citationStyles"
-fi
 
 # If no IDs as args, read from stdin
 if [[ ${#ids[@]} -eq 0 ]]; then
@@ -43,12 +35,12 @@ if [[ ${#ids[@]} -eq 0 ]]; then
 fi
 
 if [[ ${#ids[@]} -eq 0 ]]; then
-  echo "Usage: ss-batch.sh id1 id2 ... [--fields <fields>]" >&2
-  echo "   or: echo '[\"id1\",\"id2\"]' | ss-batch.sh [--fields <fields>]" >&2
+  echo "Usage: ss-author-batch.sh id1 id2 ... [--fields <fields>]" >&2
+  echo "   or: echo '[\"id1\",\"id2\"]' | ss-author-batch.sh [--fields <fields>]" >&2
   exit 1
 fi
 
-url="${BASE_URL}/paper/batch?fields=${fields}"
+url="${BASE_URL}/author/batch?fields=${fields}"
 
 tmpfile=$(mktemp)
 resultfile=$(mktemp)
@@ -105,17 +97,4 @@ with open(sys.argv[1], 'w') as f:
   done
 done
 
-if $bibtex; then
-  python3 -c "
-import json, sys
-with open(sys.argv[1]) as f:
-    data = json.load(f)
-for paper in data:
-    bib = paper.get('citationStyles', {}).get('bibtex', '')
-    if bib:
-        print(bib)
-        print()
-" "$resultfile"
-else
-  cat "$resultfile"
-fi
+cat "$resultfile"

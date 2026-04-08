@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # ss-citations.sh — Explore citation network (forward/backward)
 # Usage: ss-citations.sh <paper_id> [options]
-#   --direction <d>  "forward" (who cited this) or "backward" (what this cites) (default: forward)
-#   --fields <f>     Comma-separated fields for cited/citing papers
-#   --limit <n>      Max results (default: 100, max: 1000)
-#   --offset <n>     Offset for pagination (default: 0)
+#   --direction <d>       "forward" (who cited this) or "backward" (what this cites) (default: forward)
+#   --fields <f>          Comma-separated fields for cited/citing papers
+#   --limit <n>           Max results (default: 100, max: 1000)
+#   --offset <n>          Offset for pagination (default: 0)
+#   --influential-only    Only show influential citations
 set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
@@ -16,6 +17,7 @@ direction="forward"
 fields="$DEFAULT_FIELDS"
 limit="100"
 offset="0"
+influential_only=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -23,6 +25,7 @@ while [[ $# -gt 0 ]]; do
     --fields) fields="$2"; shift 2 ;;
     --limit) limit="$2"; shift 2 ;;
     --offset) offset="$2"; shift 2 ;;
+    --influential-only) influential_only=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
     *) paper_id="$1"; shift ;;
   esac
@@ -61,7 +64,17 @@ for attempt in $(seq 1 $max_retries); do
   http_code=$(curl "${curl_args[@]}" "$url")
 
   if [[ "$http_code" == "200" ]]; then
-    cat "$tmpfile"
+    if $influential_only; then
+      python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+data['data'] = [x for x in data.get('data', []) if x.get('isInfluential')]
+print(json.dumps(data))
+" "$tmpfile"
+    else
+      cat "$tmpfile"
+    fi
     exit 0
   elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
     echo "Rate limited, retrying in ${backoff}s (attempt $attempt/$max_retries)..." >&2

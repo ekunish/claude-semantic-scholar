@@ -2,6 +2,7 @@
 # ss-paper.sh — Get details for a single paper
 # Usage: ss-paper.sh <paper_id> [options]
 #   --fields <f>  Comma-separated fields (default: title,abstract,year,citationCount,authors,venue,openAccessPdf,tldr,fieldsOfStudy)
+#   --bibtex      Output BibTeX citation instead of JSON
 #
 # Paper ID formats:
 #   SHA hash:    649def34f8be52c8b66281af98ae884c09aef38b
@@ -18,14 +19,21 @@ DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,o
 
 paper_id=""
 fields="$DEFAULT_FIELDS"
+bibtex=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --fields) fields="$2"; shift 2 ;;
+    --bibtex) bibtex=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
     *) paper_id="$1"; shift ;;
   esac
 done
+
+# Ensure citationStyles is in fields when --bibtex is requested
+if $bibtex && [[ "$fields" != *"citationStyles"* ]]; then
+  fields="${fields},citationStyles"
+fi
 
 if [[ -z "$paper_id" ]]; then
   echo "Usage: ss-paper.sh <paper_id> [--fields <fields>]" >&2
@@ -50,7 +58,21 @@ for attempt in $(seq 1 $max_retries); do
   http_code=$(curl "${curl_args[@]}" "$url")
 
   if [[ "$http_code" == "200" ]]; then
-    cat "$tmpfile"
+    if $bibtex; then
+      python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+bib = data.get('citationStyles', {}).get('bibtex', '')
+if bib:
+    print(bib)
+else:
+    print('No BibTeX available for this paper', file=sys.stderr)
+    sys.exit(1)
+" "$tmpfile"
+    else
+      cat "$tmpfile"
+    fi
     exit 0
   elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
     echo "Rate limited, retrying in ${backoff}s (attempt $attempt/$max_retries)..." >&2

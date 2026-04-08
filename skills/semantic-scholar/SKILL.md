@@ -12,13 +12,18 @@ Search academic papers, explore citation networks, and discover related work usi
 | Task | Script | Example |
 |------|--------|---------|
 | Keyword search | `ss-search.sh` | `ss-search.sh "heart sound classification" --year 2020-` |
+| Title match | `ss-match.sh` | `ss-match.sh "Attention Is All You Need"` |
 | Paper details | `ss-paper.sh` | `ss-paper.sh "DOI:10.1109/TBME.2023.1234"` |
+| Paper BibTeX | `ss-paper.sh` | `ss-paper.sh "DOI:10.1109/TBME.2023.1234" --bibtex` |
 | Batch retrieval | `ss-batch.sh` | `echo '["id1","id2"]' \| ss-batch.sh` |
+| Batch BibTeX | `ss-batch.sh` | `ss-batch.sh id1 id2 --bibtex` |
 | Citations (forward) | `ss-citations.sh` | `ss-citations.sh <paper_id> --direction forward` |
+| Influential only | `ss-citations.sh` | `ss-citations.sh <paper_id> --influential-only` |
 | References (backward) | `ss-citations.sh` | `ss-citations.sh <paper_id> --direction backward` |
 | Recommendations | `ss-recommend.sh` | `ss-recommend.sh --positive id1,id2` |
 | Author search | `ss-author.sh` | `ss-author.sh "Springer"` |
 | Author papers | `ss-author.sh` | `ss-author.sh --id 12345 --papers` |
+| Author batch | `ss-author-batch.sh` | `ss-author-batch.sh id1 id2 id3` |
 
 Scripts are on PATH — call them directly: `ss-search.sh ...`
 
@@ -62,9 +67,9 @@ ss-search.sh \
 Format results as a markdown table, sorted by citation count descending:
 
 ```markdown
-| # | Title | Authors | Year | Citations | Venue | PDF |
-|---|-------|---------|------|-----------|-------|-----|
-| 1 | ... | First Author et al. | 2023 | 45 | IEEE TBME | [PDF](url) |
+| # | Title | Authors | Year | Citations | Influential | Venue | PDF |
+|---|-------|---------|------|-----------|-------------|-------|-----|
+| 1 | ... | First Author et al. | 2023 | 45 | 12 | IEEE TBME | [PDF](url) |
 ```
 
 Include:
@@ -199,6 +204,44 @@ Present a structured literature summary:
 - Key findings per category
 - Research gaps identified
 
+## Workflow 6: Search-to-Zotero Pipeline
+
+Import papers found via Semantic Scholar directly into Zotero using BibTeX.
+
+### Step 1: Search and select
+
+```bash
+ss-search.sh "topic of interest" --year 2020- --limit 20
+```
+
+Present results as a numbered table. The user selects papers by number.
+
+### Step 2: Export BibTeX
+
+For selected papers, batch-fetch BibTeX citations:
+
+```bash
+ss-batch.sh <id1> <id2> <id3> --bibtex > /tmp/selected.bib
+```
+
+For a single paper:
+
+```bash
+ss-paper.sh <paper_id> --bibtex > /tmp/paper.bib
+```
+
+### Step 3: Import to Zotero
+
+```bash
+zotero_import.sh --bibtex /tmp/selected.bib --collection "Literature Review"
+```
+
+If BibTeX is unavailable for some papers, fall back to DOI-based import by extracting DOIs from the search results' `externalIds.DOI` field:
+
+```bash
+zotero_import.sh --doi "10.1234/example1" "10.1234/example2"
+```
+
 ## Paper ID Resolution
 
 When the user provides a reference in various formats, resolve it to a usable ID:
@@ -206,7 +249,7 @@ When the user provides a reference in various formats, resolve it to a usable ID
 - **DOI**: Prefix with `DOI:` → `ss-paper.sh "DOI:10.1109/TBME.2023.1234"`
 - **ArXiv**: Prefix with `ARXIV:` → `ss-paper.sh "ARXIV:2106.15928"`
 - **PubMed**: Prefix with `PMID:` → `ss-paper.sh "PMID:19872477"`
-- **Title**: Use title match → `ss-search.sh "exact paper title here" --relevance --limit 1`
+- **Title**: Use exact match → `ss-match.sh "exact paper title here"`
 - **S2 URL**: Extract paper ID from the URL path
 
 ## Integration with paper-summary
