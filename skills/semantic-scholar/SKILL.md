@@ -27,6 +27,7 @@ Search academic papers, explore citation networks, and discover related work usi
 | arXiv paper | `ss-arxiv.sh` | `ss-arxiv.sh 2106.15928` |
 | arXiv BibTeX | `ss-arxiv.sh` | `ss-arxiv.sh 2106.15928 --bibtex` |
 | arXiv search | `ss-arxiv-search.sh` | `ss-arxiv-search.sh "transformer" --category cs.CL` |
+| PDF URL resolve | `ss-pdf.sh` | `ss-pdf.sh "10.48550/arXiv.1706.03762"` |
 
 Scripts are on PATH — call them directly: `ss-search.sh ...`
 
