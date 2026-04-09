@@ -40,14 +40,3 @@ ss_rate_wait() {
 
   ) 200>"${S2_RATE_LOCK}.flock"
 }
-
-# Call after a 429 to record that a backoff period is needed.
-# Sets the lock timestamp far enough in the future that the next
-# ss_rate_wait() will sleep for $1 seconds (default: S2_MIN_INTERVAL).
-ss_rate_backoff() {
-  local backoff_secs="${1:-$S2_MIN_INTERVAL}"
-  (
-    flock -x 200
-    date +%s%N > "$S2_RATE_LOCK"
-  ) 200>"${S2_RATE_LOCK}.flock"
-}

@@ -50,7 +50,7 @@ if s2_get "/paper/${encoded_id}?fields=${fields}" "$tmpfile"; then
 import json, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
-bib = data.get('citationStyles', {}).get('bibtex', '')
+bib = (data.get('citationStyles') or {}).get('bibtex', '')
 if bib:
     print(bib)
 else:

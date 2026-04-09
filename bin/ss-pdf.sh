@@ -26,7 +26,7 @@ if [[ -z "$doi" ]]; then
 fi
 
 # Normalize DOI
-doi=$(echo "$doi" | sed -E 's#^doi:##i; s#^https?://(dx\.)?doi\.org/##')
+doi=$(echo "$doi" | sed -E 's#^doi:##i; s#^https?://(dx\.)?doi\.org/##; s#\?.*##; s%#.*%%')
 
 # 1. arXiv pattern match
 doi_lower=$(echo "$doi" | tr '[:upper:]' '[:lower:]')
@@ -50,7 +50,8 @@ encoded_doi=$(urlencode "$doi" "")
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
 
-http_code=$(curl -s -o "$tmpfile" -w "%{http_code}" "https://api.unpaywall.org/v2/${encoded_doi}?email=${UNPAYWALL_EMAIL}")
+http_code=$(curl -s -o "$tmpfile" -w "%{http_code}" "https://api.unpaywall.org/v2/${encoded_doi}?email=${UNPAYWALL_EMAIL}") || true
+[[ -z "$http_code" || "$http_code" == "000" ]] && { printf 'Error: network request failed\n' >&2; exit 1; }
 
 if [[ "$http_code" != "200" ]]; then
   printf 'Unpaywall error: HTTP %s\n' "$http_code" >&2

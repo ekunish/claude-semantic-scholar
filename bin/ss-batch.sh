@@ -35,7 +35,14 @@ fi
 if [[ ${#ids[@]} -eq 0 ]]; then
   stdin_data=$(cat)
   if printf '%s\n' "$stdin_data" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
-    mapfile -t ids < <(printf '%s\n' "$stdin_data" | python3 -c "import sys,json; [print(x) for x in json.load(sys.stdin)]")
+    mapfile -t ids < <(printf '%s\n' "$stdin_data" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+if not isinstance(d, list):
+    print('Error: expected JSON array, got ' + type(d).__name__, file=sys.stderr)
+    sys.exit(1)
+[print(x) for x in d]
+")
   else
     mapfile -t ids < <(printf '%s\n' "$stdin_data" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$')
   fi
@@ -89,7 +96,7 @@ import json, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
 for paper in data:
-    bib = paper.get('citationStyles', {}).get('bibtex', '')
+    bib = (paper.get('citationStyles') or {}).get('bibtex', '')
     if bib:
         print(bib)
         print()

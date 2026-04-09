@@ -47,13 +47,13 @@ if ! echo "$query" | grep -qE '(ti:|au:|abs:|cat:|all:|jr:|co:)'; then
   query="all:${query}"
 fi
 
-# Append category filter if specified
-if [[ -n "$category" ]]; then
-  query="${query}+AND+cat:${category}"
-fi
+# URL-encode the query first, before appending category
+encoded_query=$(urlencode "$query" ":")
 
-# URL-encode the query
-encoded_query=$(urlencode "$query" "+:")
+# Append category filter if specified (after encoding to preserve literal +)
+if [[ -n "$category" ]]; then
+  encoded_query="${encoded_query}+AND+cat:${category}"
+fi
 
 # Build URL
 url="${ARXIV_API}?search_query=${encoded_query}&start=${start}&max_results=${limit}"
@@ -65,7 +65,8 @@ tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
 
 sleep 3  # arXiv courtesy pause
-http_code=$(curl -sL -o "$tmpfile" -w "%{http_code}" --max-time 30 "$url")
+http_code=$(curl -sL -o "$tmpfile" -w "%{http_code}" --max-time 30 "$url") || true
+[[ -z "$http_code" || "$http_code" == "000" ]] && { printf 'Error: network request failed\n' >&2; exit 1; }
 
 if [[ "$http_code" != "200" ]]; then
   echo "Error: HTTP $http_code" >&2

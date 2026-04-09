@@ -32,7 +32,8 @@ s2_get() {
   for ((attempt=1; attempt<=max_retries; attempt++)); do
     ss_rate_wait
     local http_code
-    http_code=$(curl "${curl_args[@]}" "${base}${url}")
+    http_code=$(curl "${curl_args[@]}" "${base}${url}") || true
+    [[ -z "$http_code" || "$http_code" == "000" ]] && http_code="000"
 
     if [[ "$http_code" == "200" ]]; then
       return 0
@@ -62,7 +63,8 @@ s2_post() {
   for ((attempt=1; attempt<=max_retries; attempt++)); do
     ss_rate_wait
     local http_code
-    http_code=$(curl "${curl_args[@]}" "${base}${url}")
+    http_code=$(curl "${curl_args[@]}" "${base}${url}") || true
+    [[ -z "$http_code" || "$http_code" == "000" ]] && http_code="000"
 
     if [[ "$http_code" == "200" ]]; then
       return 0

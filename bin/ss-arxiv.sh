@@ -36,7 +36,8 @@ trap 'rm -f "$tmpfile"' EXIT
 
 sleep 3  # arXiv courtesy pause
 http_code=$(curl -sL -o "$tmpfile" -w "%{http_code}" --max-time 30 \
-  "${ARXIV_API}?id_list=${arxiv_id}")
+  "${ARXIV_API}?id_list=${arxiv_id}") || true
+[[ -z "$http_code" || "$http_code" == "000" ]] && { printf 'Error: network request failed\n' >&2; exit 1; }
 
 if [[ "$http_code" != "200" ]]; then
   echo "Error: HTTP $http_code" >&2
