@@ -8,7 +8,7 @@
 # Accepts paper IDs as arguments or JSON array from stdin.
 # Auto-chunks into batches of 500 if more IDs are provided.
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_FIELDS="title,year,citationCount,authors,venue"
 BATCH_SIZE=500

@@ -14,7 +14,7 @@
 #   ss-arxiv-search.sh "ti:attention AND au:vaswani"
 #   ss-arxiv-search.sh "deep learning" --sort submittedDate --limit 20
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 ARXIV_API="https://export.arxiv.org/api/query"
 
@@ -53,7 +53,7 @@ if [[ -n "$category" ]]; then
 fi
 
 # URL-encode the query
-encoded_query=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe='+:'))" "$query")
+encoded_query=$(urlencode "$query" "+:")
 
 # Build URL
 url="${ARXIV_API}?search_query=${encoded_query}&start=${start}&max_results=${limit}"

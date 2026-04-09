@@ -8,7 +8,7 @@
 #
 # Output JSON uses S2-compatible field names where possible.
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 ARXIV_API="https://export.arxiv.org/api/query"
 
@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --bibtex) bibtex=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) arxiv_id="$arxiv_id${arxiv_id:+ }$1"; shift ;;
+    *) [[ -z "$arxiv_id" ]] || die "unexpected argument: $1"; arxiv_id="$1"; shift ;;
   esac
 done
 

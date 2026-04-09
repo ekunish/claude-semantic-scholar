@@ -12,7 +12,7 @@
 #   CorpusId:    CorpusId:215416146
 #   URL:         https://arxiv.org/abs/2106.15928
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,tldr,fieldsOfStudy,publicationDate,externalIds"
 
@@ -39,7 +39,7 @@ if [[ -z "$paper_id" ]]; then
   exit 1
 fi
 
-encoded_id=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$paper_id")
+encoded_id=$(urlencode "$paper_id" "")
 
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT

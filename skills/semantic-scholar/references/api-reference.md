@@ -234,7 +234,7 @@ Combine: `("heart sound" | phonocardiogram) +classification -fetal`
 | 200 | Success | — |
 | 400 | Bad request | Check parameters |
 | 404 | Not found | Check paper/author ID |
-| 429 | Rate limited | Wait 30s, retry |
+| 429 | Rate limited | Wait 60s, retry with exponential backoff |
 | 500 | Server error | Retry after delay |
 
 ## Limits Summary

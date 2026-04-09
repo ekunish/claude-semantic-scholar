@@ -6,7 +6,7 @@
 # Uses the /paper/search/match endpoint which returns the single best match.
 # Useful when copying a title from a PDF, citation list, or reference manager.
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,tldr,fieldsOfStudy,publicationDate,externalIds"
 

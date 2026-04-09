@@ -48,8 +48,6 @@ ss_rate_backoff() {
   local backoff_secs="${1:-$S2_MIN_INTERVAL}"
   (
     flock -x 200
-    # Write a future timestamp so the next ss_rate_wait() will sleep
-    local future_ns=$(( $(date +%s%N) + backoff_secs * 1000000000 - S2_MIN_INTERVAL * 1000000000 ))
-    echo "$future_ns" > "$S2_RATE_LOCK"
+    date +%s%N > "$S2_RATE_LOCK"
   ) 200>"${S2_RATE_LOCK}.flock"
 }

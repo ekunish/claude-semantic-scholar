@@ -7,7 +7,7 @@
 #   --offset <n>          Offset for pagination (default: 0)
 #   --influential-only    Only show influential citations
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_FIELDS="title,year,citationCount,authors,venue"
 
@@ -35,7 +35,7 @@ if [[ -z "$paper_id" ]]; then
   exit 1
 fi
 
-encoded_id=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$paper_id")
+encoded_id=$(urlencode "$paper_id" "")
 
 if [[ "$direction" == "forward" ]]; then
   endpoint="citations"

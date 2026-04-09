@@ -12,7 +12,7 @@
 #   --relevance           Use relevance-ranked search instead of bulk
 #   --token <t>           Continuation token for bulk pagination
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_FIELDS="title,year,citationCount,influentialCitationCount,authors,venue"
 

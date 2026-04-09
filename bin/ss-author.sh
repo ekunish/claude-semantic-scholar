@@ -10,7 +10,7 @@
 #   --limit <n>    Max results (default: 20)
 #   --offset <n>   Offset for pagination (default: 0)
 set -euo pipefail
-source "$(dirname "$0")/_helpers.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_SEARCH_FIELDS="name,affiliations,paperCount,citationCount,hIndex"
 DEFAULT_DETAIL_FIELDS="name,affiliations,paperCount,citationCount,hIndex,homepage,externalIds"
