@@ -15,7 +15,7 @@ source "$(dirname "$0")/_rate_limit.sh"
 BASE_URL="https://api.semanticscholar.org/graph/v1"
 DEFAULT_SEARCH_FIELDS="name,affiliations,paperCount,citationCount,hIndex"
 DEFAULT_DETAIL_FIELDS="name,affiliations,paperCount,citationCount,hIndex,homepage,externalIds"
-DEFAULT_PAPER_FIELDS="title,year,citationCount,venue,openAccessPdf"
+DEFAULT_PAPER_FIELDS="title,year,citationCount,venue"
 
 query=""
 author_id=""

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ss-paper.sh — Get details for a single paper
 # Usage: ss-paper.sh <paper_id> [options]
-#   --fields <f>  Comma-separated fields (default: title,abstract,year,citationCount,authors,venue,openAccessPdf,tldr,fieldsOfStudy)
+#   --fields <f>  Comma-separated fields (default: title,abstract,year,citationCount,authors,venue,tldr,fieldsOfStudy)
 #   --bibtex      Output BibTeX citation instead of JSON
 #
 # Paper ID formats:
@@ -15,7 +15,7 @@ set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 BASE_URL="https://api.semanticscholar.org/graph/v1"
-DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,openAccessPdf,tldr,fieldsOfStudy,publicationDate,externalIds"
+DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,tldr,fieldsOfStudy,publicationDate,externalIds"
 
 paper_id=""
 fields="$DEFAULT_FIELDS"

@@ -9,7 +9,7 @@ set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 BASE_URL="https://api.semanticscholar.org/graph/v1"
-DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,openAccessPdf,tldr,fieldsOfStudy,publicationDate,externalIds"
+DEFAULT_FIELDS="title,abstract,year,citationCount,referenceCount,authors,venue,tldr,fieldsOfStudy,publicationDate,externalIds"
 
 title=""
 fields="$DEFAULT_FIELDS"

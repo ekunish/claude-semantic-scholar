@@ -3,7 +3,7 @@
 # Usage: ss-recommend.sh [options]
 #   --positive <ids>   Comma-separated paper IDs to use as positive seeds (required)
 #   --negative <ids>   Comma-separated paper IDs to use as negative seeds (optional)
-#   --fields <f>       Comma-separated fields (default: title,year,citationCount,authors,venue,openAccessPdf)
+#   --fields <f>       Comma-separated fields (default: title,year,citationCount,authors,venue)
 #   --limit <n>        Max recommendations (default: 20, max: 500)
 #
 # Single seed mode: If only one positive ID and no negatives, uses the simpler GET endpoint.
@@ -12,7 +12,7 @@ set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 REC_URL="https://api.semanticscholar.org/recommendations/v1"
-DEFAULT_FIELDS="title,year,citationCount,authors,venue,openAccessPdf"
+DEFAULT_FIELDS="title,year,citationCount,authors,venue"
 
 positive=""
 negative=""

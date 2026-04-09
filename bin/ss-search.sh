@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ss-search.sh — Semantic Scholar keyword search
 # Usage: ss-search.sh <query> [options]
-#   --fields <f>          Comma-separated fields (default: title,year,citationCount,authors,venue,openAccessPdf)
+#   --fields <f>          Comma-separated fields (default: title,year,citationCount,authors,venue)
 #   --year <range>        Year filter (e.g., "2020-", "2018-2023")
 #   --min-citations <n>   Minimum citation count
 #   --limit <n>           Max results (default: 20)
@@ -15,7 +15,7 @@ set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 BASE_URL="https://api.semanticscholar.org/graph/v1"
-DEFAULT_FIELDS="title,year,citationCount,influentialCitationCount,authors,venue,openAccessPdf"
+DEFAULT_FIELDS="title,year,citationCount,influentialCitationCount,authors,venue"
 
 query=""
 fields="$DEFAULT_FIELDS"

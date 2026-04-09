@@ -2,7 +2,7 @@
 # ss-batch.sh — Batch retrieve multiple papers
 # Usage: echo '["id1","id2"]' | ss-batch.sh [options]
 #    or: ss-batch.sh id1 id2 id3 [options]
-#   --fields <f>  Comma-separated fields (default: title,year,citationCount,authors,venue,openAccessPdf)
+#   --fields <f>  Comma-separated fields (default: title,year,citationCount,authors,venue)
 #   --bibtex      Output concatenated BibTeX citations instead of JSON
 #
 # Accepts paper IDs as arguments or JSON array from stdin.
@@ -11,7 +11,7 @@ set -euo pipefail
 source "$(dirname "$0")/_rate_limit.sh"
 
 BASE_URL="https://api.semanticscholar.org/graph/v1"
-DEFAULT_FIELDS="title,year,citationCount,authors,venue,openAccessPdf"
+DEFAULT_FIELDS="title,year,citationCount,authors,venue"
 BATCH_SIZE=500
 
 fields="$DEFAULT_FIELDS"

@@ -52,7 +52,6 @@ Always returned: `paperId`, `title`
 | `citationCount` | integer | Number of citations |
 | `influentialCitationCount` | integer | High-impact citations |
 | `isOpenAccess` | boolean | Open access status |
-| `openAccessPdf` | object | `{url, status}` if available |
 | `fieldsOfStudy` | list | e.g., Computer Science, Medicine |
 | `s2FieldsOfStudy` | list | S2-specific field classification |
 | `authors` | list | `[{authorId, name}]` |
@@ -89,7 +88,6 @@ GET /paper/search/bulk
 | `fields` | No | Comma-separated field names |
 | `year` | No | Year range: `2020-`, `2018-2023`, `2020` |
 | `publicationTypes` | No | `JournalArticle`, `Conference`, `Review`, `CaseReport`, etc. |
-| `openAccessPdf` | No | Filter by PDF availability |
 | `minCitationCount` | No | Minimum citation threshold |
 | `publicationDateOrYear` | No | Date range: `2020-01-01:2023-12-31` |
 | `venue` | No | Venue filter |

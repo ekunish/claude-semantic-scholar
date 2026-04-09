@@ -86,15 +86,14 @@ ss-search.sh \
 Format results as a markdown table, sorted by citation count descending:
 
 ```markdown
-| # | Title | Authors | Year | Citations | Influential | Venue | PDF |
-|---|-------|---------|------|-----------|-------------|-------|-----|
-| 1 | ... | First Author et al. | 2023 | 45 | 12 | IEEE TBME | [PDF](url) |
+| # | Title | Authors | Year | Citations | Influential | Venue |
+|---|-------|---------|------|-----------|-------------|-------|
+| 1 | ... | First Author et al. | 2023 | 45 | 12 | IEEE TBME |
 ```
 
 Include:
 - Sequential numbering for easy reference
 - First author + "et al." (not all authors)
-- Open access PDF link if available
 - Total result count and any filters applied
 
 ### Step 5: Synthesize
@@ -281,9 +280,10 @@ When the user provides a reference in various formats, resolve it to a usable ID
 
 After finding papers with this skill, use the `/paper-summary` skill to create detailed summaries:
 
-1. Check `openAccessPdf.url` in the search results
-2. Download the PDF: `curl -L -o paper.pdf "<pdf_url>"`
-3. Invoke `/paper-summary` to create a structured Japanese summary
+1. For arXiv papers, get the PDF URL via `ss-arxiv.sh <arxiv_id>` (the `link` field contains the abstract page; construct the PDF URL as `https://arxiv.org/pdf/<arxiv_id>.pdf`)
+2. For non-arXiv papers, use the Unpaywall API to find a PDF: `curl -s "https://api.unpaywall.org/v2/<DOI>?email=<your_email>"` and check the `best_oa_location.url_for_pdf` field
+3. Download the PDF: `curl -L -o paper.pdf "<pdf_url>"`
+4. Invoke `/paper-summary` to create a structured Japanese summary
 
 This creates a complete workflow: **discover → filter → read → summarize**.
 
@@ -291,7 +291,7 @@ This creates a complete workflow: **discover → filter → read → summarize**
 
 ### Paper tables
 
-Always include: #, Title, Authors (first + et al.), Year, Citations, Venue, PDF link (if available).
+Always include: #, Title, Authors (first + et al.), Year, Citations, Venue.
 
 ### Author tables
 
