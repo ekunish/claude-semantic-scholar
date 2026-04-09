@@ -8,6 +8,7 @@
 #
 # Output: JSON with {doi, pdfUrl, source} or {doi, pdfUrl: null, source: null}
 set -euo pipefail
+source "$(dirname "$0")/_helpers.sh"
 
 doi=""
 
@@ -33,6 +34,7 @@ if [[ "$doi_lower" == 10.48550/arxiv.* ]]; then
   arxiv_id="${doi#*/arXiv.}"
   arxiv_id="${arxiv_id#*/arxiv.}"
   arxiv_id="${arxiv_id#*/ARXIV.}"
+  arxiv_id=$(normalize_arxiv_id "$arxiv_id")
   pdf_url="https://arxiv.org/pdf/${arxiv_id}.pdf"
   python3 -c "
 import json
@@ -51,7 +53,7 @@ print(json.dumps({'doi': '$doi', 'pdfUrl': None, 'source': None}))
   exit 0
 fi
 
-encoded_doi=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$doi', safe=''))")
+encoded_doi=$(urlencode "$doi")
 
 pdf_url=$(curl -s "https://api.unpaywall.org/v2/${encoded_doi}?email=${UNPAYWALL_EMAIL}" | python3 -c "
 import sys, json

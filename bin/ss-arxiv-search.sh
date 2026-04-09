@@ -14,8 +14,9 @@
 #   ss-arxiv-search.sh "ti:attention AND au:vaswani"
 #   ss-arxiv-search.sh "deep learning" --sort submittedDate --limit 20
 set -euo pipefail
+source "$(dirname "$0")/_helpers.sh"
 
-ARXIV_API="http://export.arxiv.org/api/query"
+ARXIV_API="https://export.arxiv.org/api/query"
 
 query=""
 category=""
@@ -26,13 +27,13 @@ order="descending"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --category) category="$2"; shift 2 ;;
-    --limit) limit="$2"; shift 2 ;;
-    --start) start="$2"; shift 2 ;;
-    --sort) sort="$2"; shift 2 ;;
-    --order) order="$2"; shift 2 ;;
+    --category) category=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --limit) limit=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --start) start=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --sort) sort=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --order) order=$(require_arg "$1" "${2:-}"); shift 2 ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) query="$1"; shift ;;
+    *) query="$query${query:+ }$1"; shift ;;
   esac
 done
 

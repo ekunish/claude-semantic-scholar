@@ -9,7 +9,7 @@
 # Single seed mode: If only one positive ID and no negatives, uses the simpler GET endpoint.
 # Multi-seed mode: Uses POST endpoint with positive/negative seeds.
 set -euo pipefail
-source "$(dirname "$0")/_rate_limit.sh"
+source "$(dirname "$0")/_helpers.sh"
 
 REC_URL="https://api.semanticscholar.org/recommendations/v1"
 DEFAULT_FIELDS="title,year,citationCount,authors,venue"
@@ -21,10 +21,10 @@ limit="20"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --positive) positive="$2"; shift 2 ;;
-    --negative) negative="$2"; shift 2 ;;
-    --fields) fields="$2"; shift 2 ;;
-    --limit) limit="$2"; shift 2 ;;
+    --positive) positive=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --negative) negative=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --fields) fields=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --limit) limit=$(require_arg "$1" "${2:-}"); shift 2 ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
@@ -38,23 +38,20 @@ fi
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
 
-curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30)
-if [[ -n "${S2_API_KEY:-}" ]]; then
-  curl_args+=(-H "x-api-key: ${S2_API_KEY}")
-fi
-
 IFS=',' read -ra pos_ids <<< "$positive"
 
 # Single seed: simple GET
 if [[ ${#pos_ids[@]} -eq 1 && -z "$negative" ]]; then
   encoded_id=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "${pos_ids[0]}")
-  url="${REC_URL}/papers/forpaper/${encoded_id}?fields=${fields}&limit=${limit}"
+
+  curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30)
+  [[ -n "${S2_API_KEY:-}" ]] && curl_args+=(-H "x-api-key: ${S2_API_KEY}")
 
   max_retries=5
   backoff=60
   for attempt in $(seq 1 $max_retries); do
     ss_rate_wait
-    http_code=$(curl "${curl_args[@]}" "$url")
+    http_code=$(curl "${curl_args[@]}" "${REC_URL}/papers/forpaper/${encoded_id}?fields=${fields}&limit=${limit}")
 
     if [[ "$http_code" == "200" ]]; then
       cat "$tmpfile"
@@ -72,8 +69,6 @@ if [[ ${#pos_ids[@]} -eq 1 && -z "$negative" ]]; then
   done
 else
   # Multi-seed: POST
-  url="${REC_URL}/papers?fields=${fields}&limit=${limit}"
-
   body_json=$(python3 -c "
 import json, sys
 pos = sys.argv[1].split(',')
@@ -81,13 +76,15 @@ neg = sys.argv[2].split(',') if sys.argv[2] else []
 print(json.dumps({'positivePaperIds': pos, 'negativePaperIds': neg}))
 " "$positive" "${negative:-}")
 
-  curl_args+=(-H "Content-Type: application/json")
+  curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30
+    -H "Content-Type: application/json")
+  [[ -n "${S2_API_KEY:-}" ]] && curl_args+=(-H "x-api-key: ${S2_API_KEY}")
 
   max_retries=5
   backoff=60
   for attempt in $(seq 1 $max_retries); do
     ss_rate_wait
-    http_code=$(curl "${curl_args[@]}" -X POST -d "$body_json" "$url")
+    http_code=$(curl "${curl_args[@]}" -X POST -d "$body_json" "${REC_URL}/papers?fields=${fields}&limit=${limit}")
 
     if [[ "$http_code" == "200" ]]; then
       cat "$tmpfile"

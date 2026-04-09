@@ -12,9 +12,8 @@
 #   --relevance           Use relevance-ranked search instead of bulk
 #   --token <t>           Continuation token for bulk pagination
 set -euo pipefail
-source "$(dirname "$0")/_rate_limit.sh"
+source "$(dirname "$0")/_helpers.sh"
 
-BASE_URL="https://api.semanticscholar.org/graph/v1"
 DEFAULT_FIELDS="title,year,citationCount,influentialCitationCount,authors,venue"
 
 query=""
@@ -31,18 +30,18 @@ token=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --fields) fields="$2"; shift 2 ;;
-    --year) year="$2"; shift 2 ;;
-    --min-citations) min_citations="$2"; shift 2 ;;
-    --limit) limit="$2"; shift 2 ;;
-    --venue) venue="$2"; shift 2 ;;
-    --fields-of-study) fields_of_study="$2"; shift 2 ;;
-    --pub-types) pub_types="$2"; shift 2 ;;
-    --sort) sort="$2"; shift 2 ;;
+    --fields) fields=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --year) year=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --min-citations) min_citations=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --limit) limit=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --venue) venue=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --fields-of-study) fields_of_study=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --pub-types) pub_types=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --sort) sort=$(require_arg "$1" "${2:-}"); shift 2 ;;
     --relevance) use_relevance=true; shift ;;
-    --token) token="$2"; shift 2 ;;
+    --token) token=$(require_arg "$1" "${2:-}"); shift 2 ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) query="$1"; shift ;;
+    *) query="$query${query:+ }$1"; shift ;;
   esac
 done
 
@@ -53,12 +52,12 @@ fi
 
 # Build URL
 if $use_relevance; then
-  url="${BASE_URL}/paper/search"
+  endpoint="/paper/search"
 else
-  url="${BASE_URL}/paper/search/bulk"
+  endpoint="/paper/search/bulk"
 fi
 
-encoded_query=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$query")
+encoded_query=$(urlencode "$query")
 params="query=${encoded_query}&fields=${fields}&limit=${limit}"
 [[ -n "$year" ]] && params+="&year=${year}"
 [[ -n "$min_citations" ]] && params+="&minCitationCount=${min_citations}"
@@ -72,33 +71,11 @@ if $use_relevance && [[ -n "$token" ]]; then
   params+="&offset=${token}"
 fi
 
-# Build curl args
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
 
-curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30)
-if [[ -n "${S2_API_KEY:-}" ]]; then
-  curl_args+=(-H "x-api-key: ${S2_API_KEY}")
+if s2_get "${endpoint}?${params}" "$tmpfile"; then
+  cat "$tmpfile"
+else
+  exit 1
 fi
-
-# Retry logic
-max_retries=5
-backoff=60
-for attempt in $(seq 1 $max_retries); do
-  ss_rate_wait
-  http_code=$(curl "${curl_args[@]}" "${url}?${params}")
-
-  if [[ "$http_code" == "200" ]]; then
-    cat "$tmpfile"
-    exit 0
-  elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
-    echo "Rate limited, retrying in ${backoff}s (attempt $attempt/$max_retries)..." >&2
-    sleep "$backoff"
-    ss_rate_backoff "$backoff"
-    backoff=$(( backoff * 2 ))
-  else
-    echo "Error: HTTP $http_code" >&2
-    cat "$tmpfile" >&2
-    exit 1
-  fi
-done

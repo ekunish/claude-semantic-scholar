@@ -3,7 +3,7 @@
 # Source this file at the top of each script: source "$(dirname "$0")/_rate_limit.sh"
 #
 # Uses a lockfile to track the last API call timestamp across all scripts.
-# Default interval: 10s without API key, 1s with API key.
+# Default interval: 60s without API key, 1s with API key.
 
 S2_RATE_LOCK="${TMPDIR:-/tmp}/.s2_rate_limit"
 if [[ -n "${S2_API_KEY:-}" ]]; then

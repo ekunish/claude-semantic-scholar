@@ -10,9 +10,8 @@
 #   --limit <n>    Max results (default: 20)
 #   --offset <n>   Offset for pagination (default: 0)
 set -euo pipefail
-source "$(dirname "$0")/_rate_limit.sh"
+source "$(dirname "$0")/_helpers.sh"
 
-BASE_URL="https://api.semanticscholar.org/graph/v1"
 DEFAULT_SEARCH_FIELDS="name,affiliations,paperCount,citationCount,hIndex"
 DEFAULT_DETAIL_FIELDS="name,affiliations,paperCount,citationCount,hIndex,homepage,externalIds"
 DEFAULT_PAPER_FIELDS="title,year,citationCount,venue"
@@ -26,13 +25,13 @@ offset="0"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --id) author_id="$2"; shift 2 ;;
+    --id) author_id=$(require_arg "$1" "${2:-}"); shift 2 ;;
     --papers) get_papers=true; shift ;;
-    --fields) fields="$2"; shift 2 ;;
-    --limit) limit="$2"; shift 2 ;;
-    --offset) offset="$2"; shift 2 ;;
+    --fields) fields=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --limit) limit=$(require_arg "$1" "${2:-}"); shift 2 ;;
+    --offset) offset=$(require_arg "$1" "${2:-}"); shift 2 ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) query="$1"; shift ;;
+    *) query="$query${query:+ }$1"; shift ;;
   esac
 done
 
@@ -45,42 +44,22 @@ fi
 if [[ -n "$author_id" ]]; then
   if $get_papers; then
     [[ -z "$fields" ]] && fields="$DEFAULT_PAPER_FIELDS"
-    url="${BASE_URL}/author/${author_id}/papers?fields=${fields}&limit=${limit}&offset=${offset}"
+    endpoint="/author/${author_id}/papers?fields=${fields}&limit=${limit}&offset=${offset}"
   else
     [[ -z "$fields" ]] && fields="$DEFAULT_DETAIL_FIELDS"
-    url="${BASE_URL}/author/${author_id}?fields=${fields}"
+    endpoint="/author/${author_id}?fields=${fields}"
   fi
 else
   [[ -z "$fields" ]] && fields="$DEFAULT_SEARCH_FIELDS"
-  encoded_query=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$query")
-  url="${BASE_URL}/author/search?query=${encoded_query}&fields=${fields}&limit=${limit}&offset=${offset}"
+  encoded_query=$(urlencode "$query")
+  endpoint="/author/search?query=${encoded_query}&fields=${fields}&limit=${limit}&offset=${offset}"
 fi
 
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
 
-curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30)
-if [[ -n "${S2_API_KEY:-}" ]]; then
-  curl_args+=(-H "x-api-key: ${S2_API_KEY}")
+if s2_get "$endpoint" "$tmpfile"; then
+  cat "$tmpfile"
+else
+  exit 1
 fi
-
-max_retries=5
-backoff=60
-for attempt in $(seq 1 $max_retries); do
-  ss_rate_wait
-  http_code=$(curl "${curl_args[@]}" "$url")
-
-  if [[ "$http_code" == "200" ]]; then
-    cat "$tmpfile"
-    exit 0
-  elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
-    echo "Rate limited, retrying in ${backoff}s (attempt $attempt/$max_retries)..." >&2
-    sleep "$backoff"
-    ss_rate_backoff "$backoff"
-    backoff=$(( backoff * 2 ))
-  else
-    echo "Error: HTTP $http_code" >&2
-    cat "$tmpfile" >&2
-    exit 1
-  fi
-done

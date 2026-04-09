@@ -8,8 +8,9 @@
 #
 # Output JSON uses S2-compatible field names where possible.
 set -euo pipefail
+source "$(dirname "$0")/_helpers.sh"
 
-ARXIV_API="http://export.arxiv.org/api/query"
+ARXIV_API="https://export.arxiv.org/api/query"
 
 arxiv_id=""
 bibtex=false
@@ -18,7 +19,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --bibtex) bibtex=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) arxiv_id="$1"; shift ;;
+    *) arxiv_id="$arxiv_id${arxiv_id:+ }$1"; shift ;;
   esac
 done
 
@@ -28,7 +29,7 @@ if [[ -z "$arxiv_id" ]]; then
 fi
 
 # Normalize arXiv ID: strip prefix and URL parts
-arxiv_id=$(echo "$arxiv_id" | sed -E 's#^ARXIV:##i; s#^https?://arxiv\.org/(abs|pdf)/##; s#\.pdf$##')
+arxiv_id=$(normalize_arxiv_id "$arxiv_id")
 
 tmpfile=$(mktemp)
 trap 'rm -f "$tmpfile"' EXIT
