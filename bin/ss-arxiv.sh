@@ -157,4 +157,4 @@ else:
         'journalRef': journal_ref or None,
     }
     print(json.dumps(paper, ensure_ascii=False))
-" "$tmpfile" $(if $bibtex; then echo "--bibtex"; fi)
+" "$tmpfile" $(if $bibtex; then echo "--bibtex"; fi) || die "Failed to parse arXiv response"

@@ -146,4 +146,4 @@ for entry in root.findall(f'{ATOM}entry'):
     })
 
 print(json.dumps({'totalResults': total, 'data': papers}, ensure_ascii=False))
-" "$tmpfile"
+" "$tmpfile" || die "Failed to parse arXiv response"

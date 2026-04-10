@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
     --fields) fields=$(require_arg "$1" "${2:-}"); shift 2 ;;
     --bibtex) bibtex=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) paper_id="$paper_id${paper_id:+ }$1"; shift ;;
+    *) [[ -z "$paper_id" ]] || die "unexpected argument: $1"; paper_id="$1"; shift ;;
   esac
 done
 

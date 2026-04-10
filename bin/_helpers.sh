@@ -47,7 +47,8 @@ s2_get() {
       return 1
     fi
   done
-  die "All $max_retries retries exhausted"
+  printf 'Error: All %d retries exhausted\n' "$max_retries" >&2
+  return 1
 }
 
 # Make a POST request to S2 API with retry/backoff
@@ -78,7 +79,8 @@ s2_post() {
       return 1
     fi
   done
-  die "All $max_retries retries exhausted"
+  printf 'Error: All %d retries exhausted\n' "$max_retries" >&2
+  return 1
 }
 
 # URL-encode a string. Optional second arg sets safe chars (default: /)

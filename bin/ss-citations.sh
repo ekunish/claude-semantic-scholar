@@ -26,7 +26,7 @@ while [[ $# -gt 0 ]]; do
     --offset) offset=$(require_arg "$1" "${2:-}"); shift 2 ;;
     --influential-only) influential_only=true; shift ;;
     -*) echo "Unknown option: $1" >&2; exit 1 ;;
-    *) paper_id="$paper_id${paper_id:+ }$1"; shift ;;
+    *) [[ -z "$paper_id" ]] || die "unexpected argument: $1"; paper_id="$1"; shift ;;
   esac
 done
 
