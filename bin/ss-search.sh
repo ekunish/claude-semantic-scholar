@@ -14,7 +14,7 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
-DEFAULT_FIELDS="title,year,citationCount,influentialCitationCount,authors,venue"
+DEFAULT_FIELDS="title,abstract,tldr,year,citationCount,influentialCitationCount,authors,venue"
 
 query=""
 fields="$DEFAULT_FIELDS"

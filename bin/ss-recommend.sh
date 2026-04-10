@@ -12,7 +12,7 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 REC_BASE="https://api.semanticscholar.org/recommendations/v1"
-DEFAULT_FIELDS="title,year,citationCount,authors,venue"
+DEFAULT_FIELDS="title,abstract,tldr,year,citationCount,authors,venue"
 
 positive=""
 negative=""

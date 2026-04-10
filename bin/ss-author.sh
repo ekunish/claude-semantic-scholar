@@ -14,7 +14,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 DEFAULT_SEARCH_FIELDS="name,affiliations,paperCount,citationCount,hIndex"
 DEFAULT_DETAIL_FIELDS="name,affiliations,paperCount,citationCount,hIndex,homepage,externalIds"
-DEFAULT_PAPER_FIELDS="title,year,citationCount,venue"
+DEFAULT_PAPER_FIELDS="title,abstract,tldr,year,citationCount,venue"
 
 query=""
 author_id=""

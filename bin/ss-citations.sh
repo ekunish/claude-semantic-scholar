@@ -9,7 +9,7 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
-DEFAULT_FIELDS="title,year,citationCount,authors,venue"
+DEFAULT_FIELDS="title,abstract,tldr,year,citationCount,authors,venue"
 
 paper_id=""
 direction="forward"
