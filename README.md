@@ -1,6 +1,6 @@
 # claude-semantic-scholar
 
-Claude Code plugin for academic literature search using the [Semantic Scholar API](https://www.semanticscholar.org/product/api).
+Claude Code and Codex plugin for academic literature search using the [Semantic Scholar API](https://www.semanticscholar.org/product/api).
 
 ## Features
 
@@ -16,6 +16,17 @@ Claude Code plugin for academic literature search using the [Semantic Scholar AP
 - **Built-in rate limiting** across all scripts
 
 ## Installation
+
+### Codex
+
+```
+codex plugin marketplace add ekunish/claude-semantic-scholar
+codex plugin add semantic-scholar@claude-semantic-scholar
+```
+
+Start a new thread after installing so Codex can load the plugin skills and scripts.
+
+### Claude Code
 
 ```
 /plugin marketplace add ekunish/claude-semantic-scholar
@@ -34,6 +45,15 @@ The skill triggers automatically when you ask about literature search, paper dis
 ## Optional Dependencies
 
 - **[claude-zotero](https://github.com/ekunish/claude-zotero)** — Required for the Search-to-Zotero pipeline (Workflow 6). Enables `ss-batch.sh --bibtex | zotero_import.sh` to import search results directly into Zotero. The `--bibtex` flag itself works standalone and outputs standard BibTeX to stdout.
+
+## Repository Layout
+
+- `plugins/semantic-scholar/.codex-plugin/plugin.json` — Codex plugin manifest
+- `plugins/semantic-scholar/.claude-plugin/plugin.json` — Claude Code plugin manifest
+- `plugins/semantic-scholar/skills/semantic-scholar/SKILL.md` — Literature search skill
+- `plugins/semantic-scholar/bin/` — Semantic Scholar and arXiv helper scripts
+- `.agents/plugins/marketplace.json` — Codex marketplace
+- `.claude-plugin/marketplace.json` — Claude Code marketplace
 
 ## Rate Limiting
 

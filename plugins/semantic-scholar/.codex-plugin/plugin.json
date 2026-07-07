@@ -1,0 +1,39 @@
+{
+  "name": "semantic-scholar",
+  "version": "2.1.0",
+  "description": "Literature search and citation exploration using the Semantic Scholar API.",
+  "author": {
+    "name": "ekunish",
+    "url": "https://github.com/ekunish"
+  },
+  "homepage": "https://github.com/ekunish/claude-semantic-scholar",
+  "repository": "https://github.com/ekunish/claude-semantic-scholar",
+  "license": "MIT",
+  "keywords": [
+    "semantic-scholar",
+    "academic",
+    "papers",
+    "citations",
+    "literature-review",
+    "research"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Semantic Scholar",
+    "shortDescription": "Search papers and explore citation networks",
+    "longDescription": "Search academic literature, inspect paper metadata, explore forward and backward citation networks, find author publications, export BibTeX, and discover related work with Semantic Scholar and arXiv APIs.",
+    "developerName": "ekunish",
+    "category": "Research",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://github.com/ekunish/claude-semantic-scholar",
+    "defaultPrompt": [
+      "Find recent papers about heart sound classification",
+      "この論文を引用している論文を探して",
+      "Recommend papers similar to these seed papers"
+    ],
+    "brandColor": "#185ABC"
+  }
+}
