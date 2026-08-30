@@ -1,6 +1,6 @@
 {
   "name": "semantic-scholar",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Literature search and citation exploration using the Semantic Scholar API.",
   "author": {
     "name": "ekunish",

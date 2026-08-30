@@ -12,7 +12,7 @@
       "name": "semantic-scholar",
       "source": "./plugins/semantic-scholar",
       "description": "Literature search and citation exploration using Semantic Scholar API",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "author": {
         "name": "ekunish",
         "url": "https://github.com/ekunish"
