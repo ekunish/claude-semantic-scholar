@@ -52,6 +52,17 @@ export MOCK_RETRY_AFTER=1
 [[ "$(<"$MOCK_SLEEP_ARGS")" == 1 ]] || fail "Retry-After was not respected"
 
 reset_mock
+export MOCK_CURL_CODES=429,429,429,429,200
+"$ROOT/plugins/semantic-scholar/bin/ss-search.sh" "PII detection" >/dev/null
+[[ "$(<"$MOCK_CURL_STATE")" == 5 ]] || fail "keyed 429 without Retry-After was not retried until success"
+[[ "$(paste -sd, "$MOCK_SLEEP_ARGS")" == 2,4,8,16 ]] || fail "keyed 429 backoff was incorrect"
+
+reset_mock
+export MOCK_CURL_CODES=429,200
+(unset S2_API_KEY; "$ROOT/plugins/semantic-scholar/bin/ss-search.sh" "PII detection" >/dev/null </dev/null)
+[[ "$(<"$MOCK_SLEEP_ARGS")" == 30 ]] || fail "unauthenticated 429 backoff was incorrect"
+
+reset_mock
 export MOCK_CURL_CODES=500,200
 "$ROOT/plugins/semantic-scholar/bin/ss-search.sh" "PII detection" >/dev/null
 [[ "$(<"$MOCK_CURL_STATE")" == 2 ]] || fail "500 response was not retried"

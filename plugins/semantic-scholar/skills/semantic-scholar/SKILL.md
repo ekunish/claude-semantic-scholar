@@ -316,7 +316,7 @@ All scripts share a rate limiter (`_rate_limit.sh`) that automatically enforces 
 - Without API key: **60-second default interval** (shared IP-based rate pool, aggressively throttled by S2)
 - With `S2_API_KEY` env var: **1-second default interval** (the introductory keyed rate)
 - The interval is configurable via `S2_MIN_INTERVAL` env var
-- Scripts retry HTTP 429 and transient server errors up to **3 attempts**, respecting `Retry-After` when provided
+- Scripts retry HTTP 429 and transient server errors up to **8 attempts** (`S2_MAX_RETRIES`), respecting `Retry-After` when provided. S2 returns sporadic 429s even to keyed clients, so keyed 429s back off 2, 4, 8, 16, 30 s; unauthenticated 429s back off 30, 60, 120 s
 - Get an API key at: https://www.semanticscholar.org/product/api#api-key-form
 
 **IMPORTANT**: Without an API key, do NOT call scripts in parallel. Always call sequentially and let the rate limiter handle pacing. Parallel calls will exhaust the shared rate pool and cause prolonged 429 blocks.

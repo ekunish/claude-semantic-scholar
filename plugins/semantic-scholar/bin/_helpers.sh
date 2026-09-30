@@ -43,18 +43,26 @@ _s2_retry_delay() {
   local http_code="$1" attempt="$2" headers_file="$3"
   local retry_after="" delay
 
+  # S2 returns sporadic 429s even to keyed clients well below 1 req/s, so a
+  # keyed 429 is treated as transient (2, 4, 8, 16, 30 s ...). The shared
+  # unauthenticated pool needs much longer waits (30, 60, 120 s ...).
   if [[ "$http_code" == "429" ]]; then
     retry_after=$(_s2_retry_after "$headers_file")
     if [[ -n "$retry_after" ]]; then
       delay="$retry_after"
+      (( delay > 120 )) && delay=120
+    elif [[ -n "${S2_API_KEY:-}" ]]; then
+      delay=$(( 2 * (2 ** (attempt - 1)) ))
+      (( delay > 30 )) && delay=30
     else
-      delay=$(( 5 * (2 ** (attempt - 1)) ))
+      delay=$(( 30 * (2 ** (attempt - 1)) ))
+      (( delay > 120 )) && delay=120
     fi
   else
     delay=$(( 2 ** attempt ))
+    (( delay > 60 )) && delay=60
   fi
 
-  (( delay > 60 )) && delay=60
   printf '%d' "$delay"
 }
 
@@ -63,7 +71,7 @@ _s2_retry_delay() {
 # Returns: 0 on success (200), 1 on failure
 s2_get() {
   local url="$1" tmpfile="$2" base="${3:-$S2_BASE_URL}"
-  local max_retries="${S2_MAX_RETRIES:-3}"
+  local max_retries="${S2_MAX_RETRIES:-8}"
   local headers_file="${tmpfile}.headers"
 
   local curl_args=(-sS -D "$headers_file" -o "$tmpfile" -w "%{http_code}" --max-time 30)
@@ -98,7 +106,7 @@ s2_get() {
 # Usage: s2_post "/endpoint?fields=..." '{"json":"body"}' output_file [base_url]
 s2_post() {
   local url="$1" body="$2" tmpfile="$3" base="${4:-$S2_BASE_URL}"
-  local max_retries="${S2_MAX_RETRIES:-3}"
+  local max_retries="${S2_MAX_RETRIES:-8}"
   local headers_file="${tmpfile}.headers"
 
   local curl_args=(-sS -D "$headers_file" -o "$tmpfile" -w "%{http_code}" --max-time 30
