@@ -12,6 +12,7 @@ Search academic papers, explore citation networks, and discover related work usi
 | Task | Script | Example |
 |------|--------|---------|
 | Keyword search | `ss-search.sh` | `ss-search.sh "heart sound classification" --year 2020-` |
+| Bulk retrieval | `ss-search.sh` | `ss-search.sh '"heart sound" +quality' --bulk --year 2020-` |
 | Title match | `ss-match.sh` | `ss-match.sh "Attention Is All You Need"` |
 | Paper details | `ss-paper.sh` | `ss-paper.sh "DOI:10.1109/TBME.2023.1234"` |
 | Paper BibTeX | `ss-paper.sh` | `ss-paper.sh "DOI:10.1109/TBME.2023.1234" --bibtex` |
@@ -62,7 +63,9 @@ Before searching, clarify with the user (or infer from context):
 
 ### Step 2: Construct the query
 
-Use boolean syntax for precision:
+The default relevance-ranked search accepts plain-text queries. Use concise
+descriptive terms rather than boolean operators. Boolean syntax is available
+only with `--bulk`:
 - `"exact phrase"` for specific terms
 - `+required -excluded` for filtering
 - `(term1 | term2)` for synonyms
@@ -78,8 +81,8 @@ Example for PCG quality prediction:
 ```bash
 ss-search.sh \
   '("phonocardiogram" | "heart sound") +quality' \
-  --year 2020- --min-citations 5 --limit 30 \
-  --sort citationCount
+  --bulk --year 2020- --min-citations 5 \
+  --sort citationCount:desc
 ```
 
 ### Step 4: Present results
@@ -311,9 +314,9 @@ When presenting citation exploration results, note:
 All scripts share a rate limiter (`_rate_limit.sh`) that automatically enforces a minimum interval between API calls. This is handled at the program level — no manual sleep or pacing is needed when calling scripts.
 
 - Without API key: **60-second default interval** (shared IP-based rate pool, aggressively throttled by S2)
-- With `S2_API_KEY` env var: **1-second default interval** (guaranteed rate)
+- With `S2_API_KEY` env var: **1-second default interval** (the introductory keyed rate)
 - The interval is configurable via `S2_MIN_INTERVAL` env var
-- Scripts auto-retry on HTTP 429 with **exponential backoff** (60s → 120s → 240s → 480s, up to 5 attempts)
+- Scripts retry HTTP 429 and transient server errors up to **3 attempts**, respecting `Retry-After` when provided
 - Get an API key at: https://www.semanticscholar.org/product/api#api-key-form
 
 **IMPORTANT**: Without an API key, do NOT call scripts in parallel. Always call sequentially and let the rate limiter handle pacing. Parallel calls will exhaust the shared rate pool and cause prolonged 429 blocks.

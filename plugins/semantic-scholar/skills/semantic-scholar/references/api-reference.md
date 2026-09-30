@@ -76,7 +76,7 @@ Example: `fields=citations.title,citations.year,citations.citationCount`
 
 ## Endpoints
 
-### Paper Search (Bulk) — Primary search endpoint
+### Paper Search (Bulk) — Large unranked retrieval
 
 ```
 GET /paper/search/bulk
@@ -106,6 +106,7 @@ GET /paper/search
 ```
 
 Same filters as bulk, plus `offset` and `limit` (max 100 per page, 1000 total results).
+This is the default endpoint used by `ss-search.sh`; pass `--bulk` for bulk retrieval.
 
 ### Paper Title Match
 

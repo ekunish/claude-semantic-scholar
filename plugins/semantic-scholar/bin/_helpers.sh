@@ -19,34 +19,77 @@ require_arg() {
 
 # --- S2 API request helpers ---
 
+# Run curl with the API key supplied over stdin as curl config. This keeps the
+# credential out of the command line and therefore out of process listings.
+_s2_curl() {
+  if [[ -n "${S2_API_KEY:-}" ]]; then
+    printf 'header = "x-api-key: %s"\n' "$S2_API_KEY" | curl --config - "$@"
+  else
+    curl "$@"
+  fi
+}
+
+_s2_retry_after() {
+  local headers_file="$1"
+  awk 'BEGIN { IGNORECASE=1 }
+       /^Retry-After:/ {
+         gsub("\\r", "", $2)
+         if ($2 ~ /^[0-9]+$/) value=$2
+       }
+       END { if (value != "") print value }' "$headers_file"
+}
+
+_s2_retry_delay() {
+  local http_code="$1" attempt="$2" headers_file="$3"
+  local retry_after="" delay
+
+  if [[ "$http_code" == "429" ]]; then
+    retry_after=$(_s2_retry_after "$headers_file")
+    if [[ -n "$retry_after" ]]; then
+      delay="$retry_after"
+    else
+      delay=$(( 5 * (2 ** (attempt - 1)) ))
+    fi
+  else
+    delay=$(( 2 ** attempt ))
+  fi
+
+  (( delay > 60 )) && delay=60
+  printf '%d' "$delay"
+}
+
 # Make a GET request to S2 API with retry/backoff
 # Usage: s2_get "/paper/search/bulk?query=..." output_file [base_url]
 # Returns: 0 on success (200), 1 on failure
 s2_get() {
   local url="$1" tmpfile="$2" base="${3:-$S2_BASE_URL}"
-  local max_retries=5 backoff=60
+  local max_retries="${S2_MAX_RETRIES:-3}"
+  local headers_file="${tmpfile}.headers"
 
-  local curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30)
-  [[ -n "${S2_API_KEY:-}" ]] && curl_args+=(-H "x-api-key: ${S2_API_KEY}")
+  local curl_args=(-sS -D "$headers_file" -o "$tmpfile" -w "%{http_code}" --max-time 30)
 
   for ((attempt=1; attempt<=max_retries; attempt++)); do
     ss_rate_wait
     local http_code
-    http_code=$(curl "${curl_args[@]}" "${base}${url}") || true
+    http_code=$(_s2_curl "${curl_args[@]}" "${base}${url}") || true
     [[ -z "$http_code" || "$http_code" == "000" ]] && http_code="000"
 
     if [[ "$http_code" == "200" ]]; then
+      rm -f "$headers_file"
       return 0
-    elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
-      printf 'Rate limited, retrying in %ds (attempt %d/%d)...\n' "$backoff" "$attempt" "$max_retries" >&2
-      sleep "$backoff"
-      backoff=$(( backoff * 2 ))
+    elif [[ "$http_code" =~ ^(000|429|500|502|503|504)$ && $attempt -lt $max_retries ]]; then
+      local delay
+      delay=$(_s2_retry_delay "$http_code" "$attempt" "$headers_file")
+      printf 'HTTP %s, retrying in %ds (attempt %d/%d)...\n' "$http_code" "$delay" "$attempt" "$max_retries" >&2
+      sleep "$delay"
     else
       printf 'Error: HTTP %s\n' "$http_code" >&2
       cat "$tmpfile" >&2
+      rm -f "$headers_file"
       return 1
     fi
   done
+  rm -f "$headers_file"
   printf 'Error: All %d retries exhausted\n' "$max_retries" >&2
   return 1
 }
@@ -55,30 +98,34 @@ s2_get() {
 # Usage: s2_post "/endpoint?fields=..." '{"json":"body"}' output_file [base_url]
 s2_post() {
   local url="$1" body="$2" tmpfile="$3" base="${4:-$S2_BASE_URL}"
-  local max_retries=5 backoff=60
+  local max_retries="${S2_MAX_RETRIES:-3}"
+  local headers_file="${tmpfile}.headers"
 
-  local curl_args=(-s -o "$tmpfile" -w "%{http_code}" --max-time 30
+  local curl_args=(-sS -D "$headers_file" -o "$tmpfile" -w "%{http_code}" --max-time 30
     -X POST -H "Content-Type: application/json" -d "$body")
-  [[ -n "${S2_API_KEY:-}" ]] && curl_args+=(-H "x-api-key: ${S2_API_KEY}")
 
   for ((attempt=1; attempt<=max_retries; attempt++)); do
     ss_rate_wait
     local http_code
-    http_code=$(curl "${curl_args[@]}" "${base}${url}") || true
+    http_code=$(_s2_curl "${curl_args[@]}" "${base}${url}") || true
     [[ -z "$http_code" || "$http_code" == "000" ]] && http_code="000"
 
     if [[ "$http_code" == "200" ]]; then
+      rm -f "$headers_file"
       return 0
-    elif [[ "$http_code" == "429" && $attempt -lt $max_retries ]]; then
-      printf 'Rate limited, retrying in %ds (attempt %d/%d)...\n' "$backoff" "$attempt" "$max_retries" >&2
-      sleep "$backoff"
-      backoff=$(( backoff * 2 ))
+    elif [[ "$http_code" =~ ^(000|429|500|502|503|504)$ && $attempt -lt $max_retries ]]; then
+      local delay
+      delay=$(_s2_retry_delay "$http_code" "$attempt" "$headers_file")
+      printf 'HTTP %s, retrying in %ds (attempt %d/%d)...\n' "$http_code" "$delay" "$attempt" "$max_retries" >&2
+      sleep "$delay"
     else
       printf 'Error: HTTP %s\n' "$http_code" >&2
       cat "$tmpfile" >&2
+      rm -f "$headers_file"
       return 1
     fi
   done
+  rm -f "$headers_file"
   printf 'Error: All %d retries exhausted\n' "$max_retries" >&2
   return 1
 }

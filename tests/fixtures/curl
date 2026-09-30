@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${MOCK_CURL_ARGS:?}"
+: "${MOCK_CURL_STDIN:?}"
+: "${MOCK_CURL_STATE:?}"
+
+config_line=""
+if [[ ! -t 0 ]]; then
+  IFS= read -r config_line || true
+fi
+printf '%s\n' "$config_line" >> "$MOCK_CURL_STDIN"
+
+headers_file=""
+output_file=""
+while [[ $# -gt 0 ]]; do
+  printf '%s\n' "$1" >> "$MOCK_CURL_ARGS"
+  case "$1" in
+    -D|-o|-w|--max-time|-H|-d)
+      case "$1" in
+        -D) headers_file="$2" ;;
+        -o) output_file="$2" ;;
+      esac
+      printf '%s\n' "$2" >> "$MOCK_CURL_ARGS"
+      shift 2
+      ;;
+    --config)
+      printf '%s\n' "$2" >> "$MOCK_CURL_ARGS"
+      shift 2
+      ;;
+    *) shift ;;
+  esac
+done
+
+call=0
+[[ -s "$MOCK_CURL_STATE" ]] && call=$(<"$MOCK_CURL_STATE")
+call=$((call + 1))
+printf '%d\n' "$call" > "$MOCK_CURL_STATE"
+
+IFS=',' read -r -a codes <<< "${MOCK_CURL_CODES:-200}"
+index=$((call - 1))
+(( index >= ${#codes[@]} )) && index=$((${#codes[@]} - 1))
+code="${codes[$index]}"
+
+if [[ -n "$headers_file" ]]; then
+  printf 'HTTP/2 %s\r\n' "$code" > "$headers_file"
+  [[ -n "${MOCK_RETRY_AFTER:-}" ]] && printf 'Retry-After: %s\r\n' "$MOCK_RETRY_AFTER" >> "$headers_file"
+fi
+[[ -n "$output_file" ]] && printf '%s\n' "${MOCK_CURL_BODY:-{\"data\":[]}}" > "$output_file"
+printf '%s' "$code"
